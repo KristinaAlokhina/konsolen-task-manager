@@ -1,0 +1,21 @@
+tasks.json
+
+# --- Python Cache ---
+__pycache__/
+*.py[cod]
+*$py.class
+
+# --- Virtual Environments  ---
+.venv/
+venv/
+ENV/
+env/
+
+# --- IDEs und Editores  ---
+.idea/
+.vscode/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.swp
