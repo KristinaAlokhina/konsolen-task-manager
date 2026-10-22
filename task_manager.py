@@ -1,102 +1,94 @@
 import json
 import os
 
-class Task:
+class Aufgabe:
     """Klasse, die eine einzelne Aufgabe repräsentiert."""
-    def __init__(self, title, description=""):
-        self.title = title
-        self.description = description
-        self.is_completed = False
+    def __init__(self, titel, beschreibung=""):
+        self.titel = titel
+        self.beschreibung = beschreibung
+        self.ist_erledigt = False
 
-    def mark_as_completed(self):
-        self.is_completed = True
+    def als_erledigt_markieren(self):
+        """Ändert den Status der Aufgabe auf erledigt."""
+        self.ist_erledigt = True
 
     def to_dict(self):
-        """Konvertiert das Objekt in ein Dictionary für die JSON-Speicherung."""
+        """Konvertiert das Aufgaben-Objekt in ein Dictionary für die JSON-Speicherung."""
         return {
-            "title": self.title,
-            "description": self.description,
-            "is_completed": self.is_completed
+            "titel": self.titel,
+            "beschreibung": self.beschreibung,
+            "ist_erledigt": self.ist_erledigt
         }
 
     @staticmethod
-    def from_dict(data):
-        """Erstellt ein Task-Objekt aus einem Dictionary."""
-        task = Task(data["title"], data["description"])
-        task.is_completed = data["is_completed"]
-        return task
+    def from_dict(daten):
+        """Erstellt ein Aufgabe-Objekt aus einem Dictionary."""
+        aufgabe = Aufgabe(daten["titel"], daten.get("beschreibung", ""))
+        aufgabe.ist_erledigt = daten.get("ist_erledigt", False)
+        return aufgabe
 
 
-class TaskManager:
-    """Klasse zur Verwaltung der Aufgabenliste."""
-    def __init__(self, filename="tasks.json"):
-        self.filename = filename
-        self.tasks = self.load_tasks()
+class AufgabenManager:
+    """Klasse zur Verwaltung der Aufgabenliste (Reine Business-Logik)."""
+    def __init__(self, dateiname="tasks.json"):
+        self.dateiname = dateiname
+        self.aufgaben = self.aufgaben_laden()
 
-    def add_task(self, title, description=""):
-        """Fügt eine neue Aufgabe hinzu."""
-        new_task = Task(title, description)
-        self.tasks.append(new_task)
-        self.save_tasks()
-        print(f"\n[ERFOLG] Aufgabe '{title}' wurde erfolgreich hinzugefügt!")
+    def aufgabe_hinzufuegen(self, titel, beschreibung=""):
+        """Fügt eine neue Aufgabe hinzu und speichert die Liste."""
+        neue_aufgabe = Aufgabe(titel, beschreibung)
+        self.aufgaben.append(neue_aufgabe)
+        self.aufgaben_speichern()
+        return neue_aufgabe
 
-    def show_tasks(self):
-        """Zeigt alle Aufgaben an."""
-        if not self.tasks:
-            print("\n[INFO] Die Aufgabenliste ist aktuell leer.")
-            return
+    def aufgabe_erledigen(self, index):
+        """Markiert eine Aufgabe anhand ihrer Nummer als erledigt."""
+        # Schutz vor 0, negativen Indizes und Out-of-Bounds
+        if index <= 0 or index > len(self.aufgaben):
+            return False
+        self.aufgaben[index - 1].als_erledigt_markieren()
+        self.aufgaben_speichern()
+        return True
 
-        print("\n--- IHRE AUFGABEN ---")
-        for index, task in enumerate(self.tasks, start=1):
-            status = "[X] Erledigt" if task.is_completed else "[ ] Offen"
-            print(f"{index}. {task.title} - {status}")
-            if task.description:
-                print(f"   Beschreibung: {task.description}")
-        print("---------------------")
+    def aufgabe_loeschen(self, index):
+        """Löscht eine Aufgabe anhand ihrer Nummer aus der Liste."""
+        if index <= 0 or index > len(self.aufgaben):
+            return None
+        entfernte_aufgabe = self.aufgaben.pop(index - 1)
+        self.aufgaben_speichern()
+        return entfernte_aufgabe
 
-    def complete_task(self, index):
-        """Markiert eine Aufgabe als erledigt."""
-        try:
-            self.tasks[index - 1].mark_as_completed()
-            self.save_tasks()
-            print(f"\n[ERFOLG] Aufgabe Nr. {index} wurde als erledigt markiert!")
-        except IndexError:
-            print("\n[FEHLER] Ungültige Aufgabennummer!")
+    def aufgaben_speichern(self):
+        """Speichert die aktuelle Aufgabenliste in einer JSON-Datei."""
+        with open(self.dateiname, "w", encoding="utf-8") as datei:
+            json_daten = [aufgabe.to_dict() for aufgabe in self.aufgaben]
+            json.dump(json_daten, datei, ensure_ascii=False, indent=4)
 
-    def delete_task(self, index):
-        """Löscht eine Aufgabe aus der Liste."""
-        try:
-            removed = self.tasks.pop(index - 1)
-            self.save_tasks()
-            print(f"\n[ERFOLG] Aufgabe '{removed.title}' wurde gelöscht!")
-        except IndexError:
-            print("\n[FEHLER] Ungültige Aufgabennummer!")
-
-    def save_tasks(self):
-        """Speichert die Aufgaben in einer JSON-Datei."""
-        with open(self.filename, "w", encoding="utf-8") as file:
-            json_data = [task.to_dict() for task in self.tasks]
-            json.dump(json_data, file, ensure_ascii=False, indent=4)
-
-    def load_tasks(self):
-        """Lädt die Aufgaben aus einer JSON-Datei."""
-        if not os.path.exists(self.filename):
+    def aufgaben_laden(self):
+        """Lädt die Aufgaben aus der JSON-Datei. Gibt bei Fehlern eine leere Liste zurück."""
+        if not os.path.exists(self.dateiname):
             return []
         try:
-            with open(self.filename, "r", encoding="utf-8") as file:
-                json_data = json.load(file)
-                return [Task.from_dict(data) for data in json_data]
+            with open(self.dateiname, "r", encoding="utf-8") as datei:
+                json_daten = json.load(datei)
+                return [Aufgabe.from_dict(daten) for daten in json_daten]
         except (json.JSONDecodeError, KeyError):
-            print("\n[WARNUNG] Fehler beim Laden der Datei. Eine neue Liste wird erstellt.")
             return []
 
+
+# Farbcodes für eine schönere Konsolenausgabe
+GRUEN = "\033[92m"
+ROT = "\033[91m"
+GELB = "\033[93m"
+BLAU = "\033[96m"
+RESET = "\033[0m"
 
 def main():
-    """Hauptmenü der Anwendung."""
-    manager = TaskManager()
+    """Hauptmenü der Anwendung (Benutzeroberfläche / UI-Layer)."""
+    manager = AufgabenManager()
 
     while True:
-        print("\n=== KONSOLEN-TASK-MANAGER ===")
+        print(f"\n{BLAU}=== KONSOLEN-AUFGABEN-MANAGER ==={RESET}")
         print("1. Aufgaben anzeigen")
         print("2. Aufgabe hinzufügen")
         print("3. Aufgabe als erledigt markieren")
@@ -106,35 +98,59 @@ def main():
         auswahl = input("Bitte wählen Sie eine Option (1-5): ").strip()
 
         if auswahl == "1":
-            manager.show_tasks()
-        elif auswahl == "2":
-            title = input("Titel der Aufgabe: ").strip()
-            if not title:
-                print("\n[FEHLER] Der Titel darf nicht leer sein!")
+            if not manager.aufgaben:
+                print(f"\n{GELB}[INFO] Die Aufgabenliste ist aktuell leer.{RESET}")
                 continue
-            description = input("Beschreibung (optional): ").strip()
-            manager.add_task(title, description)
+            
+            print(f"\n{BLAU}--- IHRE AUFGABEN ---{RESET}")
+            for index, aufgabe in enumerate(manager.aufgaben, start=1):
+                status = f"{GRUEN}[X] Erledigt{RESET}" if aufgabe.ist_erledigt else f"{ROT}[ ] Offen{RESET}"
+                print(f"{index}. {aufgabe.titel} - {status}")
+                if aufgabe.beschreibung:
+                    print(f"   Beschreibung: {aufgabe.beschreibung}")
+            print(f"{BLAU}---------------------{RESET}")
+
+        elif auswahl == "2":
+            titel = input("Titel der Aufgabe: ").strip()
+            if not titel:
+                print(f"\n{ROT}[FEHLER] Der Titel darf nicht leer sein!{RESET}")
+                continue
+            beschreibung = input("Beschreibung (optional): ").strip()
+            manager.aufgabe_hinzufuegen(titel, beschreibung)
+            print(f"\n{GRUEN}[ERFOLG] Aufgabe '{titel}' wurde erfolgreich hinzugefügt!{RESET}")
+
         elif auswahl == "3":
-            manager.show_tasks()
-            if manager.tasks:
-                try:
-                    num = int(input("Nummer der zu erledigenden Aufgabe: "))
-                    manager.complete_task(num)
-                except ValueError:
-                    print("\n[FEHLER] Bitte geben Sie eine gültige Zahl ein!")
+            if not manager.aufgaben:
+                print(f"\n{GELB}[INFO] Keine Aufgaben zum Bearbeiten vorhanden.{RESET}")
+                continue
+            try:
+                nummer = int(input("Nummer der zu erledigenden Aufgabe: "))
+                if manager.aufgabe_erledigen(nummer):
+                    print(f"\n{GRUEN}[ERFOLG] Aufgabe Nr. {nummer} wurde als erledigt markiert!{RESET}")
+                else:
+                    print(f"\n{ROT}[FEHLER] Ungültige Aufgabennummer!{RESET}")
+            except ValueError:
+                print(f"\n{ROT}[FEHLER] Bitte geben Sie eine gültige Zahl ein!{RESET}")
+
         elif auswahl == "4":
-            manager.show_tasks()
-            if manager.tasks:
-                try:
-                    num = int(input("Nummer der zu löschenden Aufgabe: "))
-                    manager.delete_task(num)
-                except ValueError:
-                    print("\n[FEHLER] Bitte geben Sie eine gültige Zahl ein!")
+            if not manager.aufgaben:
+                print(f"\n{GELB}[INFO] Keine Aufgaben zum Löschen vorhanden.{RESET}")
+                continue
+            try:
+                nummer = int(input("Nummer der zu löschenden Aufgabe: "))
+                entfernte_aufgabe = manager.aufgabe_loeschen(nummer)
+                if entfernte_aufgabe:
+                    print(f"\n{GRUEN}[ERFOLG] Aufgabe '{entfernte_aufgabe.titel}' wurde gelöscht!{RESET}")
+                else:
+                    print(f"\n{ROT}[FEHLER] Ungültige Aufgabennummer!{RESET}")
+            except ValueError:
+                print(f"\n{ROT}[FEHLER] Bitte geben Sie eine gültige Zahl ein!{RESET}")
+
         elif auswahl == "5":
             print("\nAuf Wiedersehen! Vielen Dank für die Nutzung.")
             break
         else:
-            print("\n[FEHLER] Ungültige Auswahl, bitte versuchen Sie es erneut.")
+            print(f"\n{ROT}[FEHLER] Ungültige Auswahl, bitte versuchen Sie es erneut.{RESET}")
 
 
 if __name__ == "__main__":
