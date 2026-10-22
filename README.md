@@ -44,7 +44,7 @@ Es wird lediglich eine Standard-Installation von Python 3.x benötigt. Zusätzli
 
 1. Repository klonen:
    ```bash
-   git clone https://github.com
+   git clone https://[github.com](https://github.com/KristinaAlokhina/konsolen-task-manager)
    ```
 2. In den Projektordner wechseln:
    ```bash
@@ -80,7 +80,7 @@ Requires a standard Python 3.x execution environment. No external third-party de
 
 1. Clone the repository:
    ```bash
-   git clone https://github.com
+   git clone https://[github.com](https://github.com/KristinaAlokhina/konsolen-task-manager)
    ```
 2. Navigate to project root:
    ```bash
@@ -116,7 +116,7 @@ Requires a standard Python 3.x execution environment. No external third-party de
 
 1. Клонируйте репозиторий:
    ```bash
-   git clone https://github.com
+   git clone https://[github.com](https://github.com/KristinaAlokhina/konsolen-task-manager)
    ```
 2. Перейдите в папку проекта:
    ```bash
@@ -152,7 +152,7 @@ Requires a standard Python 3.x execution environment. No external third-party de
 
 1. Клонуйте репозиторій:
    ```bash
-   git clone https://github.com
+   git clone https://[github.com](https://github.com/KristinaAlokhina/konsolen-task-manager)
    ```
 2. Перейдіть до папки проєкту:
    ```bash
